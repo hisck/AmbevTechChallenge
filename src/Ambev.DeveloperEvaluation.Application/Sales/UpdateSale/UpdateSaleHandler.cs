@@ -30,7 +30,6 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
             if (existingSale == null)
                 throw new ResourceNotFoundException($"Sale with Id {request.Id} not found");
 
-            // Transform request items to DTO
             var updateItems = request.Items.Select(i => new UpdateSaleItemDto(
                 i.ProductId,
                 i.ProductName,
@@ -38,7 +37,6 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
                 i.Quantity
             )).ToList();
 
-            // Use new comprehensive update method
             existingSale.UpdateSaleDetails(
                 request.CustomerId,
                 request.CustomerName,

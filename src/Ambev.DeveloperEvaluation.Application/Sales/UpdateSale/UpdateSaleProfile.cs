@@ -9,7 +9,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
         public UpdateSaleProfile()
         {
             CreateMap<UpdateSaleCommand, Sale>()
-                .ForMember(dest => dest.Items, opt => opt.Ignore()); // Items are handled separately in handler
+                .ForMember(dest => dest.Items, opt => opt.Ignore());
 
             CreateMap<UpdateSaleCommand.UpdateSaleItemCommand, SaleItem>();
             CreateMap<Sale, UpdateSaleResult>();

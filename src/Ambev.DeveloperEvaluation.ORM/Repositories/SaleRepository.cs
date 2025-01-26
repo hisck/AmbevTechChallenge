@@ -53,33 +53,28 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
 
             foreach (var filter in filters)
             {
-                // Handle range filters
                 if (filter.Key.StartsWith("_min") || filter.Key.StartsWith("_max"))
                 {
                     query = ApplyRangeFilter(query, filter);
                     continue;
                 }
 
-                // Handle string filters with wildcards
                 if (filter.Value.Contains("*"))
                 {
                     query = ApplyWildcardFilter(query, filter);
                     continue;
                 }
 
-                // Handle exact match filters
                 query = ApplyExactFilter(query, filter);
             }
 
 
-            // Apply ordering if specified
             if (!string.IsNullOrEmpty(orderBy))
             {
                 query = ApplyOrdering(query, orderBy);
             }
             else
             {
-                // Default ordering by sale date descending
                 query = query.OrderByDescending(s => s.SaleDate);
             }
 
@@ -104,37 +99,35 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
         /// </summary>
         public async Task UpdateAsync(Sale sale, CancellationToken cancellationToken = default)
         {
-            _context.ChangeTracker.Clear(); // Clear existing tracking
+            var existingSale = await _context.Sales
+                .Include(s => s.Items)
+                .FirstOrDefaultAsync(s => s.Id == sale.Id, cancellationToken);
 
-            // Attach the sale with all its navigation properties
-            _context.Sales.Attach(sale);
-            _context.Entry(sale).State = EntityState.Modified;
+            if (existingSale == null)
+                throw new ResourceNotFoundException($"Sale with ID {sale.Id} not found");
 
-            // Carefully manage sale items
-            foreach (var item in sale.Items)
+            _context.Entry(existingSale).CurrentValues.SetValues(sale);
+
+            foreach (var existingItem in existingSale.Items.ToList())
             {
-                // Determine the appropriate state for each item
-                var existingItem = _context.SaleItems.Find(item.Id);
-
-                if (existingItem == null)
+                if (!sale.Items.Any(i => i.Id == existingItem.Id))
                 {
-                    // New item needs to be added
-                    _context.SaleItems.Add(item);
-                }
-                else
-                {
-                    // Existing item needs to be updated
-                    _context.Entry(item).State = EntityState.Modified;
+                    _context.SaleItems.Remove(existingItem);
                 }
             }
 
-            // Remove any items that are no longer part of the sale
-            var currentItemIds = sale.Items.Select(i => i.Id).ToHashSet();
-            var itemsToRemove = _context.SaleItems
-                .Where(i => i.SaleId == sale.Id && !currentItemIds.Contains(i.Id))
-                .ToList();
-
-            _context.SaleItems.RemoveRange(itemsToRemove);
+            foreach (var item in sale.Items)
+            {
+                var existingItem = existingSale.Items.FirstOrDefault(i => i.Id == item.Id);
+                if (existingItem == null)
+                {
+                    existingSale.AddItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
+                }
+                else
+                {
+                    _context.Entry(existingItem).CurrentValues.SetValues(item);
+                }
+            }
 
             await _context.SaveChangesAsync(cancellationToken);
         }
@@ -149,30 +142,24 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
 
         private static IQueryable<Sale> ApplyOrdering(IQueryable<Sale> query, string orderBy)
         {
-            // If no ordering specified, return with default ordering
             if (string.IsNullOrWhiteSpace(orderBy))
                 return query.OrderByDescending(s => s.SaleDate);
 
-            // Split the order string into individual ordering expressions
             var orderClauses = orderBy.Split(',', StringSplitOptions.RemoveEmptyEntries);
             var firstOrderApplied = false;
             IOrderedQueryable<Sale> orderedQuery = null;
 
             foreach (var clause in orderClauses)
             {
-                // Parse each ordering clause
                 var trimmedClause = clause.Trim();
                 var descending = trimmedClause.EndsWith(" desc", StringComparison.OrdinalIgnoreCase);
 
-                // Get the property name by removing the ordering direction
                 var propertyName = descending
                     ? trimmedClause[..^5].Trim()
                     : trimmedClause.EndsWith(" asc", StringComparison.OrdinalIgnoreCase)
                         ? trimmedClause[..^4].Trim()
                         : trimmedClause;
 
-                // For the first ordering, we use OrderBy/OrderByDescending
-                // For subsequent orderings, we use ThenBy/ThenByDescending
                 if (!firstOrderApplied)
                 {
                     orderedQuery = ApplyInitialOrdering(query, propertyName, descending);
@@ -184,7 +171,6 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
                 }
             }
 
-            // If no valid ordering was applied, return the query with default ordering
             return orderedQuery ?? query.OrderByDescending(s => s.SaleDate);
         }
 
@@ -212,7 +198,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
                     ? query.OrderByDescending(s => s.SaleNumber)
                     : query.OrderBy(s => s.SaleNumber),
 
-                _ => query.OrderByDescending(s => s.SaleDate) // Default ordering if property not recognized
+                _ => query.OrderByDescending(s => s.SaleDate)
             };
         }
 
@@ -240,13 +226,13 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
                     ? query.ThenByDescending(s => s.SaleNumber)
                     : query.ThenBy(s => s.SaleNumber),
 
-                _ => query // If property not recognized, maintain existing ordering
+                _ => query
             };
         }
 
         private IQueryable<Sale> ApplyRangeFilter(IQueryable<Sale> query, KeyValuePair<string, string> filter)
         {
-            var fieldName = filter.Key[4..]; // Remove "_min" or "_max"
+            var fieldName = filter.Key[4..];
             var value = filter.Value;
 
             return fieldName.ToLower() switch
