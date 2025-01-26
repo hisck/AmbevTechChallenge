@@ -9,6 +9,7 @@ public class BaseEntity : IComparable<BaseEntity>
     public DateTime CreatedAt { get; protected set; }
     public DateTime? UpdatedAt { get; protected set; }
     private readonly List<DomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     public Task<IEnumerable<ValidationErrorDetail>> ValidateAsync()
     {

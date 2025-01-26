@@ -1,5 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Events;
+using Ambev.DeveloperEvaluation.Domain.Common.DTOs;
+using System.Linq;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities
 {
@@ -9,10 +11,10 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
 
         public string SaleNumber { get; private set; }
         public DateTime SaleDate { get; private set; }
-        public Guid CustomerId { get; private set; }
-        public string CustomerName { get; private set; }
-        public Guid BranchId { get; private set; }
-        public string BranchName { get; private set; }
+        public Guid CustomerId { get; set; }
+        public string CustomerName { get; set; }
+        public Guid BranchId { get; set; }
+        public string BranchName { get; set; }
         public bool IsCancelled { get; private set; }
         public decimal TotalAmount { get; private set; }
         public IReadOnlyCollection<SaleItem> Items => _items.AsReadOnly();
@@ -93,6 +95,58 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
         private string GenerateSaleNumber()
         {
             return $"SALE-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8)}".ToUpper();
+        }
+
+        public void UpdateSaleDetails(
+            Guid customerId,
+            string customerName,
+            Guid branchId,
+            string branchName,
+            List<UpdateSaleItemDto> newItems
+        )
+        {
+            // Update core sale information
+            CustomerId = customerId;
+            CustomerName = customerName;
+            BranchId = branchId;
+            BranchName = branchName;
+
+            // Manage existing items
+            var existingItemIds = newItems.Select(i => i.ProductId).ToHashSet();
+
+            // Cancel items not in the new item list
+            foreach (var existingItem in _items.ToList())
+            {
+                if (!existingItemIds.Contains(existingItem.ProductId))
+                {
+                    existingItem.Cancel();
+                }
+            }
+
+            // Add or update items
+            foreach (var itemDto in newItems)
+            {
+                var existingItem = _items
+                    .FirstOrDefault(i => i.ProductId == itemDto.ProductId && !i.IsCancelled);
+
+                if (existingItem != null)
+                {
+                    // Soft delete existing item
+                    existingItem.Cancel();
+                }
+
+                // Add new item version
+                AddItem(
+                    itemDto.ProductId,
+                    itemDto.ProductName,
+                    itemDto.UnitPrice,
+                    itemDto.Quantity
+                );
+            }
+
+            // Recalculate total amount
+            UpdateTotalAmount();
+            AddDomainEvent(new SaleModifiedEvent(this));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Domain.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -9,7 +10,8 @@ namespace Ambev.DeveloperEvaluation.ORM;
 public class DefaultContext : DbContext
 {
     public DbSet<User> Users { get; set; }
-
+    public DbSet<Sale> Sales { get; set; }
+    public DbSet<SaleItem> SaleItems { get; set; }
     public DefaultContext(DbContextOptions<DefaultContext> options) : base(options)
     {
     }
@@ -17,6 +19,11 @@ public class DefaultContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.Ignore<DomainEvent>();
+        modelBuilder.Ignore<SaleCreatedEvent>();
+        modelBuilder.Ignore<SaleModifiedEvent>();
+        modelBuilder.Ignore<SaleCancelledEvent>();
+        modelBuilder.Ignore<ItemCancelledEvent>();
         base.OnModelCreating(modelBuilder);
     }
 }
