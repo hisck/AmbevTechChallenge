@@ -1,13 +1,8 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.Common;
-using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
+using FluentValidation;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.ListSales
 {
@@ -24,15 +19,21 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.ListSales
 
         public async Task<ListSalesResult> Handle(ListSalesCommand request, CancellationToken cancellationToken)
         {
-            var sales = await _saleRepository.GetAllAsync(request.Page, request.PageSize, cancellationToken);
+            var validator = new ListSalesValidator();
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+            if (!validationResult.IsValid)
+                throw new ValidationException(validationResult.Errors);
+
+            var sales = await _saleRepository.GetAllAsync(request._page, request._size, request._order, request.Filters, cancellationToken);
             var totalCount = await _saleRepository.GetTotalCountAsync(cancellationToken);
 
             return new ListSalesResult
             {
                 Sales = _mapper.Map<List<SaleDto>>(sales),
                 TotalCount = totalCount,
-                Page = request.Page,
-                PageSize = request.PageSize
+                Page = request._page,
+                PageSize = request._size
             };
         }
     }

@@ -1,6 +1,8 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.Common;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
+using FluentValidation;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale
@@ -18,10 +20,16 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale
 
         public async Task<GetSaleResult> Handle(GetSaleCommand request, CancellationToken cancellationToken)
         {
+            var validator = new GetSaleValidator();
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+            if (!validationResult.IsValid)
+                throw new ValidationException(validationResult.Errors);
+
             var sale = await _saleRepository.GetByIdAsync(request.Id, cancellationToken);
 
             if (sale == null)
-                throw new KeyNotFoundException($"Sale with Id {request.Id} not found");
+                throw new ResourceNotFoundException($"Sale with Id {request.Id} not found");
 
             return new GetSaleResult
             {

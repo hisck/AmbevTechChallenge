@@ -7,12 +7,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
     {
         public UpdateSaleValidator()
         {
-            RuleFor(x => x.SaleNumber)
-                .NotEmpty()
-                .Matches(@"^SALE-\d{8}-[A-F0-9]{8}$")
-                .WithMessage("Invalid sale number format");
-
-            RuleFor(x => x.SaleDate).NotEmpty();
+            RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x.CustomerId).NotEmpty();
             RuleFor(x => x.CustomerName).NotEmpty();
             RuleFor(x => x.BranchId).NotEmpty();

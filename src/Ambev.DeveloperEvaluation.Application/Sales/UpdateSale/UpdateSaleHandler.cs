@@ -1,7 +1,9 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.Common;
-using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
+using Ambev.DeveloperEvaluation.Domain.Common.DTOs;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
+using FluentValidation;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
@@ -19,33 +21,37 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
 
         public async Task<UpdateSaleResult> Handle(UpdateSaleCommand request, CancellationToken cancellationToken)
         {
+            var validator = new UpdateSaleValidator();
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+            if (!validationResult.IsValid)
+                throw new ValidationException(validationResult.Errors);
+
             var existingSale = await _saleRepository.GetByIdAsync(request.Id, cancellationToken);
             if (existingSale == null)
-                throw new KeyNotFoundException($"Sale with Id {request.Id} not found");
+                throw new ResourceNotFoundException($"Sale with Id {request.Id} not found");
 
-            // Create new sale with updated information
-            var updatedSale = new Sale(
+            // Transform request items to DTO
+            var updateItems = request.Items.Select(i => new UpdateSaleItemDto(
+                i.ProductId,
+                i.ProductName,
+                i.UnitPrice,
+                i.Quantity
+            )).ToList();
+
+            // Use new comprehensive update method
+            existingSale.UpdateSaleDetails(
                 request.CustomerId,
                 request.CustomerName,
                 request.BranchId,
                 request.BranchName,
-                request.SaleDate);
+                updateItems
+            );
 
-            // Add items
-            foreach (var item in request.Items)
-            {
-                updatedSale.AddItem(
-                    item.ProductId,
-                    item.ProductName,
-                    item.UnitPrice,
-                    item.Quantity);
-            }
-
-            await _saleRepository.UpdateAsync(updatedSale, cancellationToken);
+            await _saleRepository.UpdateAsync(existingSale, cancellationToken);
 
             return new UpdateSaleResult
             {
-                Sale = _mapper.Map<SaleDto>(updatedSale)
+                Sale = _mapper.Map<SaleDto>(existingSale)
             };
         }
     }

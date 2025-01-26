@@ -6,10 +6,8 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale
     {
         public GetSaleValidator()
         {
-            RuleFor(x => x.SaleNumber)
-                .NotEmpty()
-                .Matches(@"^SALE-\d{8}-[A-F0-9]{8}$")
-                .WithMessage("Invalid sale number format");
+            RuleFor(x => x.Id)
+                .NotEmpty();
         }
     }
 }
