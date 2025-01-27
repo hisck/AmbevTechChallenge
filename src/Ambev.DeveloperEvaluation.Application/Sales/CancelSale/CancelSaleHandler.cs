@@ -38,7 +38,14 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CancelSale
             sale.Cancel();
             await _saleRepository.UpdateAsync(sale, cancellationToken);
 
-            await _eventPublisher.PublishAsync(new SaleCancelledEvent(sale));
+            var domainEvents = sale.DomainEvents;
+
+            foreach (var domainEvent in domainEvents)
+            {
+                await _eventPublisher.PublishAsync(domainEvent);
+            }
+
+            sale.ClearDomainEvents();
 
             return new CancelSaleResult
             {
