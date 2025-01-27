@@ -1,1 +1,36 @@
 /.doc
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.vspscc
+*.vssscc
+.vscode/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test Results
+TestResults/
+
+# Temporary files
+*.swp
+*.*~
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.publishsettings
+
+# Logs
+*.log
+logs/
