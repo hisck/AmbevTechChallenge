@@ -26,6 +26,11 @@ public class DefaultContext : DbContext
         modelBuilder.Ignore<SaleCancelledEvent>();
         modelBuilder.Ignore<ItemCancelledEvent>();
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Sale>()
+            .HasMany(s => s.Items)
+            .WithOne()
+            .HasForeignKey(si => si.SaleId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 public class YourDbContextFactory : IDesignTimeDbContextFactory<DefaultContext>

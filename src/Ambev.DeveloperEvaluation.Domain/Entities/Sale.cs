@@ -109,16 +109,10 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
             BranchId = branchId;
             BranchName = branchName;
 
+            // Instead of cancelling and re-adding, update existing items or add new ones
             var existingItemIds = newItems.Select(i => i.ProductId).ToHashSet();
 
-            foreach (var existingItem in _items.ToList())
-            {
-                if (!existingItemIds.Contains(existingItem.ProductId))
-                {
-                    existingItem.Cancel();
-                }
-            }
-
+            // Update or add new items
             foreach (var itemDto in newItems)
             {
                 var existingItem = _items
@@ -126,15 +120,32 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
 
                 if (existingItem != null)
                 {
+                    // Update existing non-cancelled item
+                    existingItem.UpdateItemDetails(
+                        itemDto.ProductName,
+                        itemDto.UnitPrice,
+                        itemDto.Quantity
+                    );
+                }
+                else
+                {
+                    // Add new item if it doesn't exist
+                    AddItem(
+                        itemDto.ProductId,
+                        itemDto.ProductName,
+                        itemDto.UnitPrice,
+                        itemDto.Quantity
+                    );
+                }
+            }
+
+            // Remove items not in the new list
+            foreach (var existingItem in _items.ToList())
+            {
+                if (!existingItemIds.Contains(existingItem.ProductId) && !existingItem.IsCancelled)
+                {
                     existingItem.Cancel();
                 }
-
-                AddItem(
-                    itemDto.ProductId,
-                    itemDto.ProductName,
-                    itemDto.UnitPrice,
-                    itemDto.Quantity
-                );
             }
 
             UpdateTotalAmount();

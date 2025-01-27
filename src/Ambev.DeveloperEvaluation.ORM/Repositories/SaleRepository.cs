@@ -131,33 +131,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
 
             _context.Entry(existingSale).State = EntityState.Detached;
 
-            _context.Sales.Attach(sale);
-
-            _context.Entry(existingSale).CurrentValues.SetValues(sale);
-
-            _context.Entry(sale).State = EntityState.Modified;
-
-            foreach (var existingItem in existingSale.Items.ToList())
-            {
-                if (!sale.Items.Any(i => i.Id == existingItem.Id))
-                {
-                    _context.SaleItems.Remove(existingItem);
-                }
-            }
-
-            foreach (var item in sale.Items)
-            {
-                var existingItem = existingSale.Items.FirstOrDefault(i => i.Id == item.Id);
-                if (existingItem == null)
-                {
-                    existingSale.AddItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
-                }
-                else
-                {
-                    _context.SaleItems.Entry(existingItem).CurrentValues.SetValues(item);
-                }
-            }
-
+            _context.Sales.Update(sale);
             await _context.SaveChangesAsync(cancellationToken);
         }
 

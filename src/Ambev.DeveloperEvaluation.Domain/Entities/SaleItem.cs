@@ -52,5 +52,18 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
 
             IsCancelled = true;
         }
+
+        public void UpdateItemDetails(string productName, decimal unitPrice, int quantity)
+        {
+            if (IsCancelled)
+                throw new DomainException("Cannot update a cancelled item");
+
+            ProductName = productName;
+            UnitPrice = unitPrice;
+            Quantity = quantity;
+
+            CalculateDiscount();
+            CalculateTotalAmount();
+        }
     }
 }
