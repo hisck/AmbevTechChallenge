@@ -79,23 +79,20 @@ namespace Ambev.DeveloperEvaluation.Shared
                 var network = new InMemNetwork();
 
                 services.AddRebus((configure, sp) => configure
-                    // Use PostgreSQL transport with test-specific tables
                     .Transport(t => t.UseInMemoryTransport(
                         network,
-                        "test_sales_events"  // Queue name for in-memory transport
+                        "test_sales_events"
                     ))
 
                     .Subscriptions(s => { })
-                    // Configure message routing
+
                     .Routing(r => r.TypeBased()
                         .Map<SaleCreatedEvent>("test_sales_events")
                         .Map<SaleModifiedEvent>("test_sales_events")
                         .Map<SaleCancelledEvent>("test_sales_events")
                         .Map<ItemCancelledEvent>("test_sales_events"))
-                    // Use Microsoft's logging framework
                     .Logging(l => l.MicrosoftExtensionsLogging(
                         sp.GetRequiredService<ILoggerFactory>()))
-                    // Configure basic options
                     .Options(o =>
                     {
                         o.SetNumberOfWorkers(1);
@@ -106,7 +103,6 @@ namespace Ambev.DeveloperEvaluation.Shared
                 services.AddSingleton<Rebus.Subscriptions.ISubscriptionStorage>(
                     _ => new InMemorySubscriptionStorage()
                 );
-                // Register our event publisher and other services
                 services.AddScoped<IEventPublisher, RebusEventPublisher>();
             });
 
