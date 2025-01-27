@@ -11,17 +11,21 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__DefaultConnection=Host=ambev.developerevaluation.database;Database=developer_evaluation;Username=developer;Password=ev@luAt10n
     ports:
-      - "8080"
-      - "8081"
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - ambev.developerevaluation.database
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+    networks:
+      - ambev-network
 
   ambev.developerevaluation.database:
     container_name: ambev_developer_evaluation_database
     image: postgres:13
-
     environment:
       POSTGRES_DB: developer_evaluation
       POSTGRES_USER: developer
@@ -29,6 +33,8 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    networks:
+      - ambev-network
 
   ambev.developerevaluation.nosql:
     container_name: ambev_developer_evaluation_nosql 
@@ -38,6 +44,8 @@ services:
         MONGO_INITDB_ROOT_PASSWORD: ev@luAt10n
     ports:
       - "27017"
+    networks:
+      - ambev-network
 
   ambev.developerevaluation.cache:
     container_name: ambev_developer_evaluation_cache 
@@ -48,3 +56,9 @@ services:
        MONGO_INITDB_ROOT_PASSWORD: ev@luAt10n
     ports:
        - "6379"
+    networks:
+      - ambev-network
+
+networks:
+  ambev-network:
+    driver: bridge

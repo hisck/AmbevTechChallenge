@@ -84,3 +84,306 @@ This section includes links to the detailed documentation for the different API 
 This section describes the overall structure and organization of the project files and directories. 
 
 See [Project Structure](/.doc/project-structure.md)
+
+### Running the project
+
+To run this project, just run the following command in the root folder, where the docker-compose file is located.
+```
+docker-compose up --build
+```
+This will build the project, start the containers and run the migrations
+
+From there, you can use the following endpoints:
+
+If, for some reason, the migrations didn`t run and the sales table isnt found, you can try the following:
+-> Navigate to Ambev.DeveloperEvaluation.WebApi
+-> Make sure that you have EF Core tools installed (if not, run dotnet tool install --global dotnet-ef)
+-> run dotnet ef database update
+
+## Endpoints
+
+```
+POST /api/sales -- Create a sale
+```
+```json
+{
+  "saleDate": "2025-01-27T09:00:00Z",
+  "customerId": "12345678-1234-1234-1234-123456789abc",
+  "customerName": "John Doe 2",
+  "branchId": "98765432-9876-9876-9876-987654321def",
+  "branchName": "Main Branch",
+  "items": [
+    {
+      "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+      "productName": "Product 1",
+      "unitPrice": 100.00,
+      "quantity": 5
+    },
+    {
+      "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+      "productName": "Product 2",
+      "unitPrice": 150.00,
+      "quantity": 3
+    }
+  ]
+}
+```
+returns
+```json
+{
+    "data": {
+        "saleNumber": "SALE-20250127-4C370364",
+        "sale": {
+            "id": "50276b72-eac7-4f6b-8785-c20d662d98d3",
+            "saleNumber": "SALE-20250127-4C370364",
+            "saleDate": "2025-01-27T09:00:00Z",
+            "customerId": "12345678-1234-1234-1234-123456789abc",
+            "customerName": "John Doe 2",
+            "branchId": "98765432-9876-9876-9876-987654321def",
+            "branchName": "Main Branch",
+            "totalAmount": 900.0000,
+            "isCancelled": false,
+            "items": [
+                {
+                    "id": "6815fb1e-7ed0-495f-92bd-8bb6cb272bd7",
+                    "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+                    "productName": "Product 1",
+                    "unitPrice": 100.00,
+                    "quantity": 5,
+                    "discount": 0.10,
+                    "totalAmount": 450.0000,
+                    "isCancelled": false
+                },
+                {
+                    "id": "7c1f8def-84e2-40bd-8b5d-226e12ab4e2b",
+                    "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+                    "productName": "Product 2",
+                    "unitPrice": 150.00,
+                    "quantity": 3,
+                    "discount": 0,
+                    "totalAmount": 450.00,
+                    "isCancelled": false
+                }
+            ]
+        }
+    },
+    "success": true,
+    "message": "Sale created successfully",
+    "errors": []
+}
+```
+```
+PUT /api/sales/{SALE_ID} -- Updates a sale
+```
+```json
+{
+  "customerId": "12345678-1234-1234-1234-123456789abc",
+  "customerName": "John Doe Test",
+  "branchId": "98765432-9876-9876-9876-987654321def",
+  "branchName": "Main Branch Test",
+  "items": [
+    {
+      "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+      "productName": "Product 1 Test",
+      "unitPrice": 100.00,
+      "quantity": 11
+    },
+    {
+      "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+      "productName": "Product 2 Test",
+      "unitPrice": 150.00,
+      "quantity": 18
+    }
+  ]
+  
+}
+```
+returns
+```json
+{
+    "data": {
+        "sale": {
+            "id": "50276b72-eac7-4f6b-8785-c20d662d98d3",
+            "saleNumber": "SALE-20250127-4C370364",
+            "saleDate": "2025-01-27T09:00:00Z",
+            "customerId": "12345678-1234-1234-1234-123456789abc",
+            "customerName": "John Doe Test",
+            "branchId": "98765432-9876-9876-9876-987654321def",
+            "branchName": "Main Branch Test",
+            "totalAmount": 3040.0000,
+            "isCancelled": false,
+            "items": [
+                {
+                    "id": "6815fb1e-7ed0-495f-92bd-8bb6cb272bd7",
+                    "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+                    "productName": "Product 1 Test",
+                    "unitPrice": 100.00,
+                    "quantity": 11,
+                    "discount": 0.20,
+                    "totalAmount": 880.0000,
+                    "isCancelled": false
+                },
+                {
+                    "id": "7c1f8def-84e2-40bd-8b5d-226e12ab4e2b",
+                    "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+                    "productName": "Product 2 Test",
+                    "unitPrice": 150.00,
+                    "quantity": 18,
+                    "discount": 0.20,
+                    "totalAmount": 2160.0000,
+                    "isCancelled": false
+                }
+            ]
+        }
+    },
+    "success": true,
+    "message": "",
+    "errors": []
+}
+```
+```
+POST /api/sales/{SALE_ID}/cancel -- Cancels a sale
+```
+returns
+```json
+{
+    "data": {
+        "sale": {
+            "id": "50276b72-eac7-4f6b-8785-c20d662d98d3",
+            "saleNumber": "SALE-20250127-4C370364",
+            "saleDate": "2025-01-27T09:00:00Z",
+            "customerId": "12345678-1234-1234-1234-123456789abc",
+            "customerName": "John Doe Test",
+            "branchId": "98765432-9876-9876-9876-987654321def",
+            "branchName": "Main Branch Test",
+            "totalAmount": 0,
+            "isCancelled": true,
+            "items": [
+                {
+                    "id": "6815fb1e-7ed0-495f-92bd-8bb6cb272bd7",
+                    "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+                    "productName": "Product 1 Test",
+                    "unitPrice": 100.00,
+                    "quantity": 11,
+                    "discount": 0.20,
+                    "totalAmount": 880.00,
+                    "isCancelled": true
+                },
+                {
+                    "id": "7c1f8def-84e2-40bd-8b5d-226e12ab4e2b",
+                    "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+                    "productName": "Product 2 Test",
+                    "unitPrice": 150.00,
+                    "quantity": 18,
+                    "discount": 0.20,
+                    "totalAmount": 2160.00,
+                    "isCancelled": true
+                }
+            ]
+        }
+    },
+    "success": true,
+    "message": "",
+    "errors": []
+}
+```
+```
+GET /api/sales/{SALE_ID} -- get a sale by its id
+```
+returns
+```json
+{
+    "data": {
+        "sale": {
+            "id": "50276b72-eac7-4f6b-8785-c20d662d98d3",
+            "saleNumber": "SALE-20250127-4C370364",
+            "saleDate": "2025-01-27T09:00:00Z",
+            "customerId": "12345678-1234-1234-1234-123456789abc",
+            "customerName": "John Doe Test",
+            "branchId": "98765432-9876-9876-9876-987654321def",
+            "branchName": "Main Branch Test",
+            "totalAmount": 3040.00,
+            "isCancelled": false,
+            "items": [
+                {
+                    "id": "6815fb1e-7ed0-495f-92bd-8bb6cb272bd7",
+                    "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+                    "productName": "Product 1 Test",
+                    "unitPrice": 100.00,
+                    "quantity": 11,
+                    "discount": 0.20,
+                    "totalAmount": 880.00,
+                    "isCancelled": false
+                },
+                {
+                    "id": "7c1f8def-84e2-40bd-8b5d-226e12ab4e2b",
+                    "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+                    "productName": "Product 2 Test",
+                    "unitPrice": 150.00,
+                    "quantity": 18,
+                    "discount": 0.20,
+                    "totalAmount": 2160.00,
+                    "isCancelled": false
+                }
+            ]
+        }
+    },
+    "success": true,
+    "message": "",
+    "errors": []
+}
+```
+```
+GET /api/sales -- list all sale records
+```
+returns
+```json
+{
+    "data": {
+        "currentPage": 1,
+        "totalPages": 1,
+        "totalCount": 1,
+        "data": [
+            {
+                "id": "50276b72-eac7-4f6b-8785-c20d662d98d3",
+                "saleNumber": "SALE-20250127-4C370364",
+                "saleDate": "2025-01-27T09:00:00Z",
+                "customerId": "12345678-1234-1234-1234-123456789abc",
+                "customerName": "John Doe 2",
+                "branchId": "98765432-9876-9876-9876-987654321def",
+                "branchName": "Main Branch",
+                "totalAmount": 900.00,
+                "isCancelled": false,
+                "items": [
+                    {
+                        "id": "6815fb1e-7ed0-495f-92bd-8bb6cb272bd7",
+                        "productId": "abcdef12-abcd-abcd-abcd-abcdef123456",
+                        "productName": "Product 1",
+                        "unitPrice": 100.00,
+                        "quantity": 5,
+                        "discount": 0.10,
+                        "totalAmount": 450.00,
+                        "isCancelled": false
+                    },
+                    {
+                        "id": "7c1f8def-84e2-40bd-8b5d-226e12ab4e2b",
+                        "productId": "fedcba98-fedc-fedc-fedc-fedcba987654",
+                        "productName": "Product 2",
+                        "unitPrice": 150.00,
+                        "quantity": 3,
+                        "discount": 0.00,
+                        "totalAmount": 450.00,
+                        "isCancelled": false
+                    }
+                ]
+            }
+        ],
+        "success": true,
+        "message": "",
+        "errors": []
+    },
+    "success": true,
+    "message": "",
+    "errors": []
+}
+```
