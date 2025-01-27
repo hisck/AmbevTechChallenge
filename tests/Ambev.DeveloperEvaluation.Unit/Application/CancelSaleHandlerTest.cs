@@ -10,6 +10,7 @@ using Ambev.DeveloperEvaluation.Application.Sales.Common;
 using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Common.Events;
 
 namespace Ambev.DeveloperEvaluation.Tests.Application.Sales
 {
@@ -18,12 +19,14 @@ namespace Ambev.DeveloperEvaluation.Tests.Application.Sales
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
         private readonly CancelSaleHandler _handler;
+        private readonly IEventPublisher _eventPublisher;
 
         public CancelSaleHandlerTests()
         {
             _saleRepository = Substitute.For<ISaleRepository>();
             _mapper = Substitute.For<IMapper>();
-            _handler = new CancelSaleHandler(_saleRepository, _mapper);
+            _eventPublisher = Substitute.For<IEventPublisher>();
+            _handler = new CancelSaleHandler(_saleRepository, _mapper, _eventPublisher);
         }
 
         /// <summary>

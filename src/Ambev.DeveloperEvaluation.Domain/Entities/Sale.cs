@@ -1,7 +1,6 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Common.DTOs;
-using System.Linq;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities
 {

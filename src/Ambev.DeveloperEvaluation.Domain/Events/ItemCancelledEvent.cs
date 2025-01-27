@@ -1,4 +1,5 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Events;
 
 namespace Ambev.DeveloperEvaluation.Domain.Events
 {

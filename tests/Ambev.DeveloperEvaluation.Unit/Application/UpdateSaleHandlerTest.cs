@@ -1,10 +1,10 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.Common;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.Common.Events;
 using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
-using Castle.Core.Resource;
 using NSubstitute;
 using Xunit;
 
@@ -14,13 +14,15 @@ namespace Ambev.DeveloperEvaluation.Unit.Application
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
+        private readonly IEventPublisher _eventPublisher;
         private readonly UpdateSaleHandler _handler;
 
         public UpdateSaleHandlerTests()
         {
             _saleRepository = Substitute.For<ISaleRepository>();
             _mapper = Substitute.For<IMapper>();
-            _handler = new UpdateSaleHandler(_saleRepository, _mapper);
+            _eventPublisher = Substitute.For<IEventPublisher>();
+            _handler = new UpdateSaleHandler(_saleRepository, _mapper, _eventPublisher);
         }
 
         [Fact(DisplayName = "Given valid update request When updating sale Then returns updated sale")]

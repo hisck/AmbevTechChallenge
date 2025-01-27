@@ -78,6 +78,7 @@ public partial class Program
 
         builder.Services.AddTransient(typeof(IPipelineBehavior<,>),
                                     typeof(ValidationBehavior<,>));
+        builder.Services.AddEventPublishing(builder.Configuration);
     }
 
     private static void ConfigureMiddleware(WebApplication app)

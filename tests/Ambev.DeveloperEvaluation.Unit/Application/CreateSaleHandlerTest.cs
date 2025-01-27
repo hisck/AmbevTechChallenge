@@ -1,5 +1,6 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.Common;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Common.Events;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
@@ -11,13 +12,15 @@ public class CreateSaleHandlerTests
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly IEventPublisher _eventPublisher;
     private readonly CreateSaleHandler _handler;
 
     public CreateSaleHandlerTests()
     {
         _saleRepository = Substitute.For<ISaleRepository>();
         _mapper = Substitute.For<IMapper>();
-        _handler = new CreateSaleHandler(_saleRepository, _mapper);
+        _eventPublisher = Substitute.For<IEventPublisher>();
+        _handler = new CreateSaleHandler(_saleRepository, _mapper, _eventPublisher);
     }
 
     [Fact(DisplayName = "Given valid sale data When creating sale Then returns success response")]
@@ -73,7 +76,7 @@ public class CreateSaleHandlerTests
     [Fact(DisplayName = "Given invalid sale data When creating sale Then throws validation exception")]
     public async Task Handle_InvalidRequest_ThrowsValidationException()
     {
-        var command = new CreateSaleCommand()
+        var command = new CreateSaleCommand();
 
         var act = () => _handler.Handle(command, CancellationToken.None);
 

@@ -1,6 +1,8 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.Common;
+using Ambev.DeveloperEvaluation.Common.Events;
 using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Common.DTOs;
+using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using FluentValidation;
@@ -12,11 +14,12 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
-
-        public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+        private readonly IEventPublisher _eventPublisher;
+        public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper, IEventPublisher eventPublisher)
         {
             _saleRepository = saleRepository;
             _mapper = mapper;
+            _eventPublisher = eventPublisher;
         }
 
         public async Task<UpdateSaleResult> Handle(UpdateSaleCommand request, CancellationToken cancellationToken)
@@ -46,6 +49,15 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
             );
 
             await _saleRepository.UpdateAsync(existingSale, cancellationToken);
+
+            var domainEvents = existingSale.DomainEvents;
+
+            foreach (var domainEvent in domainEvents)
+            {
+                await _eventPublisher.PublishAsync(domainEvent);
+            }
+
+            existingSale.ClearDomainEvents();
 
             return new UpdateSaleResult
             {

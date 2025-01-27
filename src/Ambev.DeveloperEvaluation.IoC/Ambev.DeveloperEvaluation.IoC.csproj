@@ -12,6 +12,11 @@
 	
 	<ItemGroup>
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+	  <PackageReference Include="Rebus" Version="8.0.2" />
+	  <PackageReference Include="Rebus.PostgreSql" Version="9.0.1" />
+	  <PackageReference Include="Rebus.ServiceProvider" Version="10.0.0" />
+	  <PackageReference Include="Rebus.Microsoft.Extensions.Logging" Version="5.0.0" />
 	</ItemGroup>
 	
 	<ItemGroup>

@@ -6,6 +6,8 @@ using AutoMapper;
 using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Common.Exceptions;
+using Ambev.DeveloperEvaluation.Common.Events;
+using Ambev.DeveloperEvaluation.Domain.Events;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
 {
@@ -13,11 +15,13 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
+        private readonly IEventPublisher _eventPublisher;
 
-        public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+        public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper, IEventPublisher eventPublisher)
         {
             _saleRepository = saleRepository;
             _mapper = mapper;
+            _eventPublisher = eventPublisher;
         }
 
         public async Task<CreateSaleResult> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
@@ -50,6 +54,8 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
             }
 
             await _saleRepository.AddAsync(sale, cancellationToken);
+
+            await _eventPublisher.PublishAsync(new SaleCreatedEvent(sale));
 
             return new CreateSaleResult
             {
