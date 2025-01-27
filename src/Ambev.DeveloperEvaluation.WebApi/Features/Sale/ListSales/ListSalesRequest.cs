@@ -8,17 +8,17 @@
         /// <summary>
         /// Gets or sets the page number for pagination (1-based)
         /// </summary>
-        public int? _page { get; set; }
+        public int? _page { get; set; } = 1;
 
         /// <summary>
         /// Gets or sets the number of items per page
         /// </summary>
-        public int? _size { get; set; }
+        public int? _size { get; set; } = 10;
 
         /// <summary>
         /// Gets or sets the ordering expression (e.g., "saleDate desc")
         /// </summary>
-        public string? _order { get; set; }
+        public string? _order { get; set; } = string.Empty;
     }
 
 }

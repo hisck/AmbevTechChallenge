@@ -47,25 +47,44 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
             Dictionary<string, string> filters,
             CancellationToken cancellationToken = default)
         {
+            Console.WriteLine($"Page: {page}, Size: {size}, OrderBy: {orderBy}");
+
             var query = _context.Sales
                 .Include(s => s.Items)
                 .AsNoTracking();
 
+            filters ??= new Dictionary<string, string>();
+
             foreach (var filter in filters)
             {
-                if (filter.Key.StartsWith("_min") || filter.Key.StartsWith("_max"))
+                switch (filter.Key)
                 {
-                    query = ApplyRangeFilter(query, filter);
-                    continue;
+                    case "_minTotalAmount":
+                        if (decimal.TryParse(filter.Value, out decimal minAmount))
+                        {
+                            query = query.Where(s => s.TotalAmount >= minAmount);
+                        }
+                        break;
+                    case "_maxTotalAmount":
+                        if (decimal.TryParse(filter.Value, out decimal maxAmount))
+                        {
+                            query = query.Where(s => s.TotalAmount <= maxAmount);
+                        }
+                        break;
+                    default:
+                        if (filter.Key.StartsWith("_min") || filter.Key.StartsWith("_max"))
+                        {
+                            query = ApplyRangeFilter(query, filter);
+                            continue;
+                        }
+                        if (filter.Value.Contains("*"))
+                        {
+                            query = ApplyWildcardFilter(query, filter);
+                            continue;
+                        }
+                        query = ApplyExactFilter(query, filter);
+                        break;
                 }
-
-                if (filter.Value.Contains("*"))
-                {
-                    query = ApplyWildcardFilter(query, filter);
-                    continue;
-                }
-
-                query = ApplyExactFilter(query, filter);
             }
 
 
@@ -77,11 +96,15 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
             {
                 query = query.OrderByDescending(s => s.SaleDate);
             }
-
-            return await query
+            Console.WriteLine($"Generated SQL: {query.ToQueryString()}");
+            var results = await query
                 .Skip((page - 1) * size)
                 .Take(size)
                 .ToListAsync(cancellationToken);
+
+            Console.WriteLine($"Results count: {results.Count}");
+
+            return results;
         }
 
         /// <summary>
@@ -106,7 +129,13 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
             if (existingSale == null)
                 throw new ResourceNotFoundException($"Sale with ID {sale.Id} not found");
 
+            _context.Entry(existingSale).State = EntityState.Detached;
+
+            _context.Sales.Attach(sale);
+
             _context.Entry(existingSale).CurrentValues.SetValues(sale);
+
+            _context.Entry(sale).State = EntityState.Modified;
 
             foreach (var existingItem in existingSale.Items.ToList())
             {
@@ -125,7 +154,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
                 }
                 else
                 {
-                    _context.Entry(existingItem).CurrentValues.SetValues(item);
+                    _context.SaleItems.Entry(existingItem).CurrentValues.SetValues(item);
                 }
             }
 
@@ -135,9 +164,44 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories
         /// <summary>
         /// Gets the total count of sales in the database
         /// </summary>
-        public async Task<int> GetTotalCountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> GetTotalCountAsync(Dictionary<string, string> filters, CancellationToken cancellationToken = default)
         {
-            return await _context.Sales.CountAsync(cancellationToken);
+            var query = _context.Sales.AsNoTracking();
+            filters ??= new Dictionary<string, string>();
+
+            foreach (var filter in filters)
+            {
+                switch (filter.Key)
+                {
+                    case "_minTotalAmount":
+                        if (decimal.TryParse(filter.Value, out decimal minAmount))
+                        {
+                            query = query.Where(s => s.TotalAmount >= minAmount);
+                        }
+                        break;
+                    case "_maxTotalAmount":
+                        if (decimal.TryParse(filter.Value, out decimal maxAmount))
+                        {
+                            query = query.Where(s => s.TotalAmount <= maxAmount);
+                        }
+                        break;
+                    default:
+                        if (filter.Key.StartsWith("_min") || filter.Key.StartsWith("_max"))
+                        {
+                            query = ApplyRangeFilter(query, filter);
+                            continue;
+                        }
+                        if (filter.Value.Contains("*"))
+                        {
+                            query = ApplyWildcardFilter(query, filter);
+                            continue;
+                        }
+                        query = ApplyExactFilter(query, filter);
+                        break;
+                }
+            }
+
+            return await query.CountAsync(cancellationToken);
         }
 
         private static IQueryable<Sale> ApplyOrdering(IQueryable<Sale> query, string orderBy)

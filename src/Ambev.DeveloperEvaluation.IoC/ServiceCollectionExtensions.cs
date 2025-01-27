@@ -29,6 +29,11 @@ namespace Ambev.DeveloperEvaluation.IoC
                     )
                 )
 
+                .Subscriptions(s => s.StoreInPostgres(
+                    connectionString,
+                    "sales_subscriptions")
+                )
+
                 .Routing(r => r.TypeBased()
                     .Map<SaleCreatedEvent>("sales_events")
                     .Map<SaleModifiedEvent>("sales_events")

@@ -149,13 +149,14 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sale
             var filters = new Dictionary<string, string>();
             foreach (var query in Request.Query)
             {
-                if (!query.Key.StartsWith("_"))
+                if (query.Key != "_page" && query.Key != "_size" && query.Key != "_order")
                 {
                     filters.Add(query.Key, query.Value.ToString());
                 }
             }
             command.Filters = filters;
             var result = await _mediator.Send(command, cancellationToken);
+            Console.WriteLine(result);
 
             return OkPaginated(
                 new PaginatedList<SaleResponse>(

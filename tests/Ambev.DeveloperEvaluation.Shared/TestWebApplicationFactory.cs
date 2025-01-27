@@ -15,6 +15,7 @@ using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Microsoft.Extensions.Logging;
 using Rebus.Transport.InMem;
+using Rebus.Persistence.InMem;
 
 namespace Ambev.DeveloperEvaluation.Shared
 {
@@ -66,12 +67,25 @@ namespace Ambev.DeveloperEvaluation.Shared
                 var db = scope.ServiceProvider.GetRequiredService<DefaultContext>();
                 db.Database.EnsureCreated();
 
+                var rebusDescriptors = services.Where(
+                    d => d.ServiceType == typeof(Rebus.Subscriptions.ISubscriptionStorage)
+                ).ToList();
+
+                foreach (var descript in rebusDescriptors)
+                {
+                    services.Remove(descript);
+                }
+
+                var network = new InMemNetwork();
+
                 services.AddRebus((configure, sp) => configure
                     // Use PostgreSQL transport with test-specific tables
                     .Transport(t => t.UseInMemoryTransport(
-                        new InMemNetwork(),
+                        network,
                         "test_sales_events"  // Queue name for in-memory transport
                     ))
+
+                    .Subscriptions(s => { })
                     // Configure message routing
                     .Routing(r => r.TypeBased()
                         .Map<SaleCreatedEvent>("test_sales_events")
@@ -89,6 +103,9 @@ namespace Ambev.DeveloperEvaluation.Shared
                     })
                 );
 
+                services.AddSingleton<Rebus.Subscriptions.ISubscriptionStorage>(
+                    _ => new InMemorySubscriptionStorage()
+                );
                 // Register our event publisher and other services
                 services.AddScoped<IEventPublisher, RebusEventPublisher>();
             });

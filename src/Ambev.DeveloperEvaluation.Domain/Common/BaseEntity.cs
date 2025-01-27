@@ -28,6 +28,7 @@ public class BaseEntity : IComparable<BaseEntity>
 
     protected BaseEntity()
     {
+        Id = Guid.NewGuid();
         CreatedAt = DateTime.UtcNow;
     }
 

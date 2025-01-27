@@ -1,6 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Common.DTOs;
+using System.ComponentModel.DataAnnotations;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities
 {
@@ -69,7 +70,6 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
 
         private void UpdateTotalAmount()
         {
-            // Sum only non-cancelled items
             TotalAmount = _items
                 .Where(item => !item.IsCancelled)
                 .Sum(item => item.TotalAmount);
@@ -104,16 +104,13 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
             List<UpdateSaleItemDto> newItems
         )
         {
-            // Update core sale information
             CustomerId = customerId;
             CustomerName = customerName;
             BranchId = branchId;
             BranchName = branchName;
 
-            // Manage existing items
             var existingItemIds = newItems.Select(i => i.ProductId).ToHashSet();
 
-            // Cancel items not in the new item list
             foreach (var existingItem in _items.ToList())
             {
                 if (!existingItemIds.Contains(existingItem.ProductId))
@@ -122,7 +119,6 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
                 }
             }
 
-            // Add or update items
             foreach (var itemDto in newItems)
             {
                 var existingItem = _items
@@ -130,11 +126,9 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
 
                 if (existingItem != null)
                 {
-                    // Soft delete existing item
                     existingItem.Cancel();
                 }
 
-                // Add new item version
                 AddItem(
                     itemDto.ProductId,
                     itemDto.ProductName,
@@ -143,7 +137,6 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
                 );
             }
 
-            // Recalculate total amount
             UpdateTotalAmount();
             AddDomainEvent(new SaleModifiedEvent(this));
         }

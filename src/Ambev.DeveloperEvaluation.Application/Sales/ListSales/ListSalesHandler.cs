@@ -26,7 +26,8 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.ListSales
                 throw new ValidationException(validationResult.Errors);
 
             var sales = await _saleRepository.GetAllAsync(request._page, request._size, request._order, request.Filters, cancellationToken);
-            var totalCount = await _saleRepository.GetTotalCountAsync(cancellationToken);
+
+            var totalCount = await _saleRepository.GetTotalCountAsync(request.Filters, cancellationToken);
 
             return new ListSalesResult
             {

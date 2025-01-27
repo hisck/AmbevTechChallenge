@@ -40,7 +40,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Application
 
             _saleRepository.GetAllAsync(1, 10, null, Arg.Any<Dictionary<string, string>>())
                 .Returns(sales);
-            _saleRepository.GetTotalCountAsync().Returns(2);
+            _saleRepository.GetTotalCountAsync(Arg.Any<Dictionary<string, string>>()).Returns(2);
             _mapper.Map<IEnumerable<SaleDto>>(sales)
                 .Returns(sales.Select(s => new SaleDto()));
 

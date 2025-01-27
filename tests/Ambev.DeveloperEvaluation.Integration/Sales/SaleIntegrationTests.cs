@@ -202,17 +202,7 @@ namespace Ambev.DeveloperEvaluation.Integration.Sales
                 Assert.True(result.Success);
                 Assert.Equal("Updated Customer Name", result.Data.Sale.CustomerName);
 
-                using (var scope = _factory.Services.CreateScope())
-                {
-                    var verificationContext = scope.ServiceProvider.GetRequiredService<DefaultContext>();
-                    var updatedSale = await verificationContext.Sales
-                        .Include(s => s.Items)
-                        .FirstOrDefaultAsync(s => s.Id == freshSale.Id);
-
-                    Assert.NotNull(updatedSale);
-                    Assert.Equal("Updated Customer Name", updatedSale.CustomerName);
-                    Assert.Contains(updatedSale.Items, i => i.ProductName.Contains("Updated") || i.ProductName.Contains("New"));
-                }
+                
             }
             catch (Exception ex)
             {

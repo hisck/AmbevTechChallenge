@@ -5,10 +5,10 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
     public class SaleItem : BaseEntity
     {
         public Guid SaleId { get; private set; }
-        public Guid ProductId { get; private set; }
-        public string ProductName { get; private set; }
-        public decimal UnitPrice { get; private set; }
-        public int Quantity { get; private set; }
+        public Guid ProductId { get; set; }
+        public string ProductName { get; set; }
+        public decimal UnitPrice { get; set; }
+        public int Quantity { get; set; }
         public decimal Discount { get; private set; }
         public decimal TotalAmount { get; private set; }
         public bool IsCancelled { get; private set; }
@@ -17,6 +17,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
 
         public SaleItem(Guid saleId, Guid productId, string productName, decimal unitPrice, int quantity)
         {
+            Id = Guid.NewGuid();
             SaleId = saleId;
             ProductId = productId;
             ProductName = productName;
